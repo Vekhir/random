@@ -23,6 +23,8 @@ module System.Random
     RandomGen(..)
   , uniform
   , uniformR
+  , uniformList
+  , shuffleList
   , genByteString
   , Random(..)
   , Uniform
@@ -187,6 +189,37 @@ uniform g = runStateGen g uniformM
 uniformR :: (UniformRange a, RandomGen g) => (a, a) -> g -> (a, g)
 uniformR r g = runStateGen g (uniformRM r)
 {-# INLINE uniformR #-}
+
+
+-- | Produce a list of the supplied length with elements generated uniformly.
+--
+-- See `uniformListM` for a stateful counterpart.
+--
+-- ====__Examples__
+--
+-- >>> let gen = mkStdGen 2023
+-- >>> import Data.Word (Word16)
+-- >>> uniformList 5 gen :: ([Word16], StdGen)
+-- ([56342,15850,25292,14347,13919],StdGen {unStdGen = SMGen 6446154349414395371 1920468677557965761})
+--
+-- @since 1.2.2
+uniformList :: (Uniform a, RandomGen g) => Int -> g -> ([a], g)
+uniformList r g = runStateGen g (uniformListM r)
+{-# INLINE uniformList #-}
+
+
+-- | Shuffle elements of a list in a random order.
+--
+-- ====__Examples__
+--
+-- >>> let gen = mkStdGen 2023
+-- >>> shuffleList ['a'..'z'] gen
+-- ("renlhfqmgptwksdiyavbxojzcu",StdGen {unStdGen = SMGen 9882508430712573120 1920468677557965761})
+--
+-- @since 1.2.2
+shuffleList :: RandomGen g => [a] -> g -> ([a], g)
+shuffleList xs g = runStateGen g (shuffleListM xs)
+{-# INLINE shuffleList #-}
 
 -- | Generates a 'ByteString' of the specified size using a pure pseudo-random
 -- number generator. See 'uniformByteStringM' for the monadic version.

@@ -4,6 +4,11 @@
 * Add default implementation for `uniformRM` using `Generics`:
   [#92](https://github.com/haskell/random/pull/92)
 
+# 1.2.2
+
+* Add: `uniformList`
+* Add: `shuffleList` and `shuffleListM`
+
 # 1.2.1
 
 * Fix support for ghc-9.2 [#99](https://github.com/haskell/random/pull/99)

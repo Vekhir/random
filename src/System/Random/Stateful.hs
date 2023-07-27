@@ -76,9 +76,12 @@ module System.Random.Stateful
   -- * Pseudo-random values of various types
   -- $uniform
   , Uniform(..)
-  , uniformListM
   , uniformViaFiniteM
   , UniformRange(..)
+
+  -- * Lists
+  , uniformListM
+  , shuffleListM
 
   -- * Generators for sequences of pseudo-random bytes
   , genShortByteStringIO
@@ -104,7 +107,6 @@ module System.Random.Stateful
   ) where
 
 import Control.DeepSeq
-import Control.Monad (replicateM)
 import Control.Monad.IO.Class
 import Control.Monad.ST
 import GHC.Conc.Sync (STM, TVar, newTVar, newTVarIO, readTVar, writeTVar)
@@ -146,6 +148,7 @@ import System.Random.Internal
 -- range @[1, 6]@ in a 'StatefulGen' context; given a /monadic/ pseudo-random
 -- number generator, you can run this probabilistic computation as follows:
 --
+-- >>> import Control.Monad (replicateM)
 -- >>> :{
 -- let rollsM :: StatefulGen g m => Int -> g -> m [Word]
 --     rollsM n = replicateM n . uniformRM (1, 6)
@@ -274,20 +277,6 @@ withMutableGen_ :: FrozenGen f m => f -> (MutableGen f m -> m a) -> m a
 withMutableGen_ fg action = fst <$> withMutableGen fg action
 
 
--- | Generates a list of pseudo-random values.
---
--- ====__Examples__
---
--- >>> import System.Random.Stateful
--- >>> let pureGen = mkStdGen 137
--- >>> g <- newIOGenM pureGen
--- >>> uniformListM 10 g :: IO [Bool]
--- [True,True,True,True,False,True,True,False,False,False]
---
--- @since 1.2.0
-uniformListM :: (StatefulGen g m, Uniform a) => Int -> g -> m [a]
-uniformListM n gen = replicateM n (uniformM gen)
-
 -- | Generates a pseudo-random value using monadic interface and `Random` instance.
 --
 -- ====__Examples__
@@ -355,6 +344,7 @@ newAtomicGenM = fmap AtomicGenM . liftIO . newIORef
 -- | Global mutable standard pseudo-random number generator. This is the same
 -- generator that was historically used by `randomIO` and `randomRIO` functions.
 --
+-- >>> import Control.Monad (replicateM)
 -- >>> replicateM 10 (uniformRM ('a', 'z') globalStdGen)
 -- "tdzxhyfvgr"
 --
@@ -776,6 +766,7 @@ applyTGen f (TGenM tvar) = do
 -- produces a short list with random even integers.
 --
 -- >>> import Data.Int (Int8)
+-- >>> import Control.Monad (replicateM)
 -- >>> :{
 -- myCustomRandomList :: FrozenGen f m => f -> m [Int8]
 -- myCustomRandomList f =

@@ -59,6 +59,8 @@ module System.Random.Internal
   , uniformFloatPositive01M
   , uniformEnumM
   , uniformEnumRM
+  , uniformListM
+  , shuffleListM
 
   -- * Generators for sequences of pseudo-random bytes
   , genShortByteStringIO
@@ -67,7 +69,7 @@ module System.Random.Internal
 
 import Control.Arrow
 import Control.DeepSeq (NFData)
-import Control.Monad (when)
+import Control.Monad (when, replicateM)
 import Control.Monad.Cont (ContT, runContT)
 import Control.Monad.IO.Class (MonadIO(..))
 import Control.Monad.ST
@@ -78,6 +80,7 @@ import Data.Bits
 import Data.ByteString.Short.Internal (ShortByteString(SBS), fromShort)
 import Data.IORef (IORef, newIORef)
 import Data.Int
+import Data.List (sortOn)
 import Data.Word
 import Foreign.C.Types
 import Foreign.Storable (Storable)
@@ -539,6 +542,41 @@ runStateGenST g action = runST $ runStateGenT g action
 runStateGenST_ :: RandomGen g => g -> (forall s . StateGenM g -> StateT g (ST s) a) -> a
 runStateGenST_ g action = runST $ runStateGenT_ g action
 {-# INLINE runStateGenST_ #-}
+
+
+-- | Generates a list of pseudo-random values.
+--
+-- ====__Examples__
+--
+-- >>> import System.Random.Stateful
+-- >>> let pureGen = mkStdGen 137
+-- >>> g <- newIOGenM pureGen
+-- >>> uniformListM 10 g :: IO [Bool]
+-- [True,True,True,True,False,True,True,False,False,False]
+--
+-- @since 1.2.0
+uniformListM :: (StatefulGen g m, Uniform a) => Int -> g -> m [a]
+uniformListM n gen = replicateM n (uniformM gen)
+{-# INLINE uniformListM #-}
+
+-- | Shuffle elements of a list in a random order.
+--
+-- ====__Examples__
+--
+-- >>> import System.Random.Stateful
+-- >>> let pureGen = mkStdGen 2023
+-- >>> g <- newIOGenM pureGen
+-- >>> shuffleListM ['a'..'z'] g :: IO String
+-- "renlhfqmgptwksdiyavbxojzcu"
+--
+-- @since 1.2.2
+shuffleListM :: StatefulGen g m => [a] -> g -> m [a]
+shuffleListM xs gen = do
+  is <- uniformListM n gen
+  pure $ map snd $ sortOn fst $ zip (is :: [Int]) xs
+  where
+    !n = length xs
+{-# INLINE shuffleListM #-}
 
 
 -- | The standard pseudo-random number generator.
