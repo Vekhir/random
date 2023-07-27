@@ -190,7 +190,7 @@ jobs:
           stack $STACK_ARGS hpc report --all
           # Upload coverage report only when the token is available.
           if [ -n "${COVERALLS_TOKEN}" ]; then
-            curl -L https://github.com/rubik/stack-hpc-coveralls/releases/download/v0.0.6.1/shc-linux-x64-8.8.4.tar.bz2 | tar xj shc
+            curl -L https://github.com/rubik/stack-hpc-coveralls/releases/download/v0.0.7.0/shc-Linux-X64.tar.bz2 | tar xj shc
             ./shc --repo-token="$COVERALLS_TOKEN" --partial-coverage --fetch-coverage combined custom
           fi
         elif [ "${{ matrix.resolver }}" == "lts-6" ]; then
